@@ -1,28 +1,33 @@
-import express from "express";
-import mongoose, { mongo } from "mongoose";
-import dotenv from "dotenv";
-
-const PORT = process.env.PORT || 8088
+import express from 'express';
+import connectDB from './config/db.js';
+import userRoutes from './routes/userRoutes.js';
+import dotenv from 'dotenv';
+import './config/passport.js'; 
+import passport from 'passport';
+import session from 'express-session';
 
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 8088;
+
+
+connectDB();
+
 
 app.use(express.json());
+app.use(session({
+    secret: process.env.GOOGLE_CLIENT_SECRET,
+    resave: false,
+    saveUninitialized: true,
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 
+app.use('/api/users', userRoutes);
 
-mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
-.then(()=>{
-    console.log("MongoDB Connected")
-})
-.catch((err)=>{
-    console.log(err.message);
-})
 
-app.listen(PORT, ()=>{
-    console.log(`Server running on port ${PORT}`)
-})
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});

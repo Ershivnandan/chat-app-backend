@@ -1,9 +1,9 @@
-const User = require('../models/User');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+import User from '../models/User.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 // Signup Controller
-exports.signup = async (req, res) => {
+export const signup = async (req, res) => {
     try {
         const { username, email, password } = req.body;
 
@@ -11,7 +11,6 @@ exports.signup = async (req, res) => {
         if (existingUser) return res.status(400).json({ message: 'User already exists' });
 
         const hashedPassword = await bcrypt.hash(password, 10);
-
         const user = new User({ username, email, password: hashedPassword });
         await user.save();
 
@@ -22,7 +21,7 @@ exports.signup = async (req, res) => {
 };
 
 // Login Controller
-exports.login = async (req, res) => {
+export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
