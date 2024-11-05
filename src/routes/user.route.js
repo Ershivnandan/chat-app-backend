@@ -1,6 +1,7 @@
 import express from 'express';
-import { login, signup } from '../controllers/authController.js';
+import { login, signup, getUser } from '../controllers/authController.js';
 import passport from 'passport';
+import authMiddleware from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
@@ -16,5 +17,7 @@ router.get('/auth/google/callback', passport.authenticate('google', { failureRed
         res.redirect('/'); 
     }
 );
+
+router.get('/getUser', authMiddleware, getUser);
 
 export default router;

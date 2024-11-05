@@ -1,4 +1,4 @@
-import User from '../models/User.js';
+import User from '../models/user.modal.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -37,3 +37,19 @@ export const login = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+export const getUser = async(req, res)=>{
+    try {
+        const userData = req.user; 
+        const userId = req.user.id; 
+        const user = await User.findById(userId).select('-password'); 
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching user', error });
+    }
+}
