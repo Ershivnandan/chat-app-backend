@@ -3,7 +3,7 @@ import friend from "../models/friend.modal.js";
 export const sendFriendRequest = async (req, res) => {
   try {
     const { friendId } = req.body;
-    const userId = req.user._id;
+    const userId = req.user.id;
 
     const existingRequest = await friend.findOne({ userId, friendId });
 
@@ -16,6 +16,7 @@ export const sendFriendRequest = async (req, res) => {
     const friendRequest = new friend({
       userId,
       friendId,
+      senderId: userId,
       status: "pending",
     });
 
@@ -72,3 +73,16 @@ export const rejectFriendRequest = async (req, res) => {
     res.status(500).json({ message: "Error rejecting friend request.", error });
   }
 };
+
+export const getFriendRequests = async (req, res) => {
+  try {
+      const userId = req.user.id;
+
+      const requests = await friend.find({ friendId: userId, status: "pending" }).populate('senderId'); // Sender ID ko populate karein
+      
+      res.status(200).json(requests);
+  } catch (error) {
+      res.status(500).json({ message: "Error fetching friend requests.", error });
+  }
+};
+
