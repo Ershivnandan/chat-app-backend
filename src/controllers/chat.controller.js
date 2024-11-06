@@ -14,7 +14,7 @@ export const createChatRoom = async (req, res) => {
 
 export const getUserChats = async (req, res) => {
     try {
-        const { userId } = req.body;
+        const  userId = req.user.id;
         const chats = await Chat.find({ participants: userId }).populate('messages.sender', 'username');
         res.status(200).json(chats);
     } catch (error) {
