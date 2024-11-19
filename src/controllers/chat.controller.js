@@ -13,14 +13,15 @@ export const createChatRoom = async (req, res) => {
 
 
 export const getUserChats = async (req, res) => {
-    try {
-        const  userId = req.user.id;
-        const chats = await Chat.find({ participants: userId }).populate('messages.sender', 'username');
-        res.status(200).json(chats);
-    } catch (error) {
-        res.status(500).json({ message: "Error fetching user chats", error });
-    }
+  try {
+      const userId = req.user.id;
+      const chats = await Chat.find({ participants: userId }).select('_id');
+      res.status(200).json(chats.map(chat => chat._id));
+  } catch (error) {
+      res.status(500).json({ message: "Error fetching user chats", error });
+  }
 };
+
 
 
 export const sendMessage = async (req, res) => {
@@ -49,3 +50,26 @@ export const getChatHistory = async (req, res) => {
     res.status(500).json({ message: "Error retrieving chat history", error });
   }
 };
+
+
+export const createGroupChat = async (req, res) => {
+  try {
+      const { groupName, participants } = req.body;
+
+      if (participants.length < 2) {
+          return res.status(400).json({ message: "A group chat needs at least 2 participants." });
+      }
+
+      const groupChat = new Chat({
+          isGroupChat: true,
+          groupName,
+          participants,
+      });
+
+      await groupChat.save();
+      res.status(201).json(groupChat);
+  } catch (error) {
+      res.status(500).json({ message: "Error creating group chat", error });
+  }
+};
+

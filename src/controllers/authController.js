@@ -53,3 +53,50 @@ export const getUser = async(req, res)=>{
         res.status(500).json({ message: 'Error fetching user', error });
     }
 }
+
+export const updateProfile = async (req, res) => {
+    try {
+        const { mobileNumber } = req.body;
+        let profileImageUrl = null;
+
+        if (req.file) {
+            profileImageUrl = await uploadImageToImageKit(req.file);
+        }
+
+        const userId = req.user.id;
+        const updateData = {
+            ...(mobileNumber && { mobileNumber }),
+            ...(profileImageUrl && { profileImage: profileImageUrl }),
+        };
+
+        const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true }).select('-password');
+
+        res.status(200).json({ message: 'Profile updated successfully', user: updatedUser });
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating profile', error });
+    }
+};
+
+export const googleAuthCallback = async (req, res) => {
+    try {
+        const { id, displayName, emails, photos } = req.user; 
+        const email = emails[0].value;
+        const profileImage = photos[0].value;
+
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            user = new User({
+                username: displayName,
+                email,
+                googleId: id,
+                profileImage,
+            });
+            await user.save();
+        }
+
+        res.redirect('/'); 
+    } catch (error) {
+        res.status(500).json({ message: 'Error during Google login', error });
+    }
+};
