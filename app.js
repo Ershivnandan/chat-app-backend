@@ -1,13 +1,13 @@
 import express from 'express';
-import connectDB from './config/db.js';
-import userRoutes from './routes/user.route.js';
+import connectDB from './src/config/db.js';
+import userRoutes from './src/routes/user.route.js';
 import dotenv from 'dotenv';
-import './config/passport.js'; 
-import chatRoutes from "./routes/chat.route.js";
+import './src/config/passport.js'; 
+import chatRoutes from "./src/routes/chat.route.js";
 import passport from 'passport';
 import session from 'express-session';
-import friendRoutes from "./routes/friends.route.js"
-import initSocket from './utils/socket.js';
+import friendRoutes from "./src/routes/friends.route.js"
+import initSocket from './src/utils/socket.js';
 import http from "http";
 
 dotenv.config();
