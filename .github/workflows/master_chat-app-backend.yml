@@ -21,18 +21,17 @@ jobs:
         with:
           node-version: '18.x'
 
-      - name: npm install, build, and test
-        run: |
-          npm install
+      - name: npm install
+        run: npm install
 
       - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+        run: zip -r release.zip . -x "*.git/*" "node_modules/*" 
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: chat-app-backend
-          path: .
+          path: release.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -41,7 +40,7 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
+      id-token: write 
 
     steps:
       - name: Download artifact from build job
@@ -49,9 +48,21 @@ jobs:
         with:
           name: chat-app-backend
 
+      - name: Check if release.zip exists
+        run: |
+          if [ -f "release.zip" ]; then
+            echo "release.zip exists."
+          else
+            echo "release.zip does not exist."
+            exit 1
+          fi
+
       - name: Unzip artifact for deployment
         run: unzip release.zip
-      
+
+      - name: List files after unzipping
+        run: ls -alh 
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -59,11 +70,13 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_b2375919-c438-4879-a645-2f135ea1129f }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_2e6b8571-36a2-4008-8b23-dfe2bebda464 }}
 
+      - name: Verify Azure login
+        run: az account show
+
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'chat-app-backend'
           slot-name: 'Production'
-          package: .
-          
+          package: . 
