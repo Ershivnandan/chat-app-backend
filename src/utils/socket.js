@@ -8,7 +8,6 @@ const initSocket = (server) => {
     io.on('connection', (socket) => {
         console.log('A user connected:', socket.id);
 
-        // Store user ID from frontend
         const userId = socket.handshake.query.userId;
         onlineUsers.set(userId, socket.id);
 
@@ -17,7 +16,7 @@ const initSocket = (server) => {
             console.log(`${userId} joined rooms: ${chatIds}`);
         });
 
-        // Typing indicator
+     
         socket.on('typing', (data) => {
             socket.to(data.chatId).emit('typing', { userId: data.userId });
         });
@@ -26,18 +25,18 @@ const initSocket = (server) => {
             socket.to(data.chatId).emit('stopTyping', { userId: data.userId });
         });
 
-        // Send message
+       
         socket.on('sendMessage', async (data) => {
             const { chatId, sender, content } = data;
 
-            // Save message in database
+        
             const chat = await Chat.findById(chatId);
             if (!chat) return;
 
             chat.messages.push({ sender, content });
             await chat.save();
 
-            // Emit message to all participants in the chat
+    
             io.to(chatId).emit('newMessage', { chatId, sender, content });
         });
 
