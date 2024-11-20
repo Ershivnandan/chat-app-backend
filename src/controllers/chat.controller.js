@@ -11,7 +11,6 @@ export const createChatRoom = async (req, res) => {
   }
 };
 
-
 export const getUserChats = async (req, res) => {
   try {
       const userId = req.user.id;
@@ -21,7 +20,6 @@ export const getUserChats = async (req, res) => {
       res.status(500).json({ message: "Error fetching user chats", error });
   }
 };
-
 
 export const sendMessage = async (req, res) => {
   try {
@@ -49,8 +47,6 @@ export const getChatHistory = async (req, res) => {
     res.status(500).json({ message: "Error retrieving chat history", error });
   }
 };
-
-
 
 export const deleteMessage = async (req, res) => {
   try {
