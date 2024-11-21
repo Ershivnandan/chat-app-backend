@@ -9,6 +9,7 @@ import session from 'express-session';
 import friendRoutes from "./src/routes/friends.route.js"
 import initSocket from './src/utils/socket.js';
 import http from "http";
+import CORS from "cors";
 
 dotenv.config();
 
@@ -21,6 +22,13 @@ connectDB();
 
 
 app.use(express.json());
+
+app.use(
+    CORS({
+        origin: ["http://localhost:5173", process.env.CLIENT_URL],
+        credentials: true,
+    })
+);
 app.use(session({
     secret: process.env.GOOGLE_CLIENT_SECRET,
     resave: false,
