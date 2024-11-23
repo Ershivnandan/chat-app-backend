@@ -16,16 +16,17 @@ const initSocket = (server) => {
             console.log(`${userId} joined rooms: ${chatIds}`);
         });
 
-     
+        // Check karo if user is Typing 
         socket.on('typing', (data) => {
             socket.to(data.chatId).emit('typing', { userId: data.userId });
         });
 
+        // Check if user is stopped Typing
         socket.on('stopTyping', (data) => {
             socket.to(data.chatId).emit('stopTyping', { userId: data.userId });
         });
 
-       
+        //Send message 
         socket.on('sendMessage', async (data) => {
             const { chatId, sender, content } = data;
 
