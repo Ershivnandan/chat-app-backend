@@ -1,7 +1,7 @@
 import { Server } from "socket.io";
 import Chat from "../models/chat.modal.js";
 
-let io; 
+let io;
 
 const initSocket = (server) => {
   io = new Server(server, {
@@ -57,7 +57,10 @@ const initSocket = (server) => {
 
       try {
         const chat = await Chat.findById(chatId);
-        if (!chat) return;
+
+        if (!chat || !chat.participants.includes(sender)) {
+          return socket.emit("error", { message: "Unauthorized action" });
+        }
 
         const newMessage = { chatId, sender, content };
         chat.messages.push(newMessage);
@@ -108,11 +111,44 @@ const initSocket = (server) => {
       }
     });
 
+    // Group Chhat functionality
+
+    socket.on("adminAdded", (data) => {
+      const { userId } = data;
+      console.log(`Admin added: ${userId}`);
+      socket.broadcast.emit("adminAdded", { userId });
+    });
+
+    socket.on("adminRemoved", (data) => {
+      const { userId } = data;
+      console.log(`Admin removed: ${userId}`);
+      socket.broadcast.emit("adminRemoved", { userId });
+    });
+
+    socket.on("participantAdded", (data) => {
+      const { userId } = data;
+      console.log(`Participant added: ${userId}`);
+      socket.broadcast.emit("participantAdded", { userId });
+    });
+
+    socket.on("participantRemoved", (data) => {
+      const { userId } = data;
+      console.log(`Participant removed: ${userId}`);
+      socket.broadcast.emit("participantRemoved", { userId });
+    });
+
     socket.on("disconnect", () => {
-      onlineUsers.delete(userId);
+      const userSockets = onlineUsers.get(userId) || [];
+      onlineUsers.set(
+        userId,
+        userSockets.filter((id) => id !== socket.id)
+      );
+      if (onlineUsers.get(userId).length === 0) {
+        onlineUsers.delete(userId);
+      }
       console.log("User disconnected:", socket.id);
     });
   });
 };
 
-export { initSocket, io }; 
+export { initSocket, io };
