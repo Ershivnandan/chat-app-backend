@@ -6,8 +6,8 @@ const userSchema = new mongoose.Schema(
         email: { type: String, required: true, unique: true },
         password: { type: String, required: false },
         googleId: { type: String, required: false },
-        profileImage: { type: String, required: false }, // Profile image URL
-        mobileNumber: { type: String, required: false }, // Optional mobile number
+        profileImage: { type: String, required: false }, 
+        mobileNumber: { type: String, required: false },
     },
     { timestamps: true }
 );
