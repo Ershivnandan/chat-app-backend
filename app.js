@@ -7,7 +7,7 @@ import chatRoutes from "./src/routes/chat.route.js";
 import passport from 'passport';
 import session from 'express-session';
 import friendRoutes from "./src/routes/friends.route.js"
-import initSocket from './src/utils/socket.js';
+import { initSocket } from './src/utils/socket.js';
 import http from "http";
 import CORS from "cors";
 
