@@ -21,7 +21,6 @@ export const createChatRoom = async (req, res) => {
   }
 };
 
-
 export const getUserChats = async (req, res) => {
   try {
       const userId = req.user.id;
@@ -50,7 +49,6 @@ export const sendMessage = async (req, res, io) => {
       res.status(500).json({ message: "Error sending message", error });
   }
 };
-
 
 export const getChatHistory = async (req, res) => {
   try {
@@ -107,8 +105,6 @@ export const deleteMessage = async (req, res) => {
     res.status(500).json({ message: "Error deleting message", error });
   }
 };
-
-
 
 // Group Chat Management 
 
