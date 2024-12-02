@@ -191,5 +191,3 @@ export const getFriendList = async (req, res) => {
       res.status(500).json({ message: "Error fetching friend list.", error });
   }
 };
-
-
