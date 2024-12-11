@@ -5,6 +5,7 @@ import {
   getUser,
   updateProfile,
   googleAuthCallback,
+  getUserByName,
 } from "../controllers/authController.js";
 import passport from "passport";
 import authMiddleware from "../middleware/auth.middleware.js";
@@ -32,6 +33,8 @@ router.put(
   upload.single("profileImage"),
   updateProfile
 );
+
+router.get('/getuserbyname', authMiddleware, getUserByName);
 
 router.get("/getUser", authMiddleware, getUser);
 

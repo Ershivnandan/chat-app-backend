@@ -7,6 +7,11 @@ export const sendFriendRequest = async (req, res) => {
     const { friendId } = req.body;
     const userId = req.user.id;
 
+    if(friendId === userId){
+      res.status(401).send({message: "you can't be your own friend"});
+      return
+    }
+
     const existingRequest = await friend.findOne({
       $or: [
         { userId, friendId },
@@ -45,7 +50,6 @@ export const sendFriendRequest = async (req, res) => {
     res.status(500).json({ message: "Error sending friend request.", error });
   }
 };
-
 
 // Accept Friend Request
 export const acceptFriendRequest = async (req, res) => {

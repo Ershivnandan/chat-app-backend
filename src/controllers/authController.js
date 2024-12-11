@@ -54,6 +54,31 @@ export const getUser = async(req, res)=>{
     }
 }
 
+export const getUserByName = async (req, res) => {
+
+    try {
+      const { userName } = req.query; 
+  
+      if (!userName) {
+        return res.status(400).json({ message: "Username is required." });
+      }
+  
+      const users = await User.find({
+        username: { $regex: userName, $options: 'i' } 
+      });
+
+  
+      if (users.length > 0) {
+        return res.status(200).json({ message: "Users found", users });
+      } else {
+        return res.status(404).json({ message: "No users found." });
+      }
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Error searching users", error });
+    }
+  };
+
 export const updateProfile = async (req, res) => {
     try {
         const { mobileNumber } = req.body;
