@@ -1,29 +1,36 @@
 import { Server } from "socket.io";
 import Chat from "../models/chat.modal.js";
+import Notification from "../models/notification.modal.js";
 
 let io;
+
+const onlineUsers = new Map();
 
 const initSocket = (server) => {
   io = new Server(server, {
     cors: {
-      origin: "*",
+      origin: ["*", "http://localhost:5173"],
       methods: ["GET", "POST"],
-    },
+      
+    }
   });
 
-  const onlineUsers = new Map();
 
   io.on("connection", async (socket) => {
     console.log("A user connected:", socket.id);
 
+    // Validate and fetch userId
     const userId = socket.handshake.query.userId;
     if (!userId) {
+      console.log("User ID not provided, disconnecting...");
       socket.disconnect();
       return;
     }
 
+    // Add user to online users map
     onlineUsers.set(userId, socket.id);
 
+    // Join user to chat rooms they are part of
     try {
       const userChats = await Chat.find({ participants: userId })
         .populate("participants", "username")
@@ -44,22 +51,33 @@ const initSocket = (server) => {
       console.error("Error initializing chats:", error);
     }
 
-    socket.on("typing", (data) => {
-      socket.to(data.chatId).emit("typing", { userId });
+    // Notification Update Listener
+    socket.on("update_notifications", async () => {
+      try {
+        const notifications = await Notification.find({ recipient: userId, read: false });
+        io.to(userId).emit("notifications_updated", notifications);
+      } catch (error) {
+        console.error("Error updating notifications:", error);
+      }
     });
 
-    socket.on("stopTyping", (data) => {
-      socket.to(data.chatId).emit("stopTyping", { userId });
+    // Typing Indicators
+    socket.on("typing", ({ chatId }) => {
+      socket.to(chatId).emit("typing", { userId });
     });
 
-    socket.on("sendMessage", async (data) => {
-      const { chatId, sender, content } = data;
+    socket.on("stopTyping", ({ chatId }) => {
+      socket.to(chatId).emit("stopTyping", { userId });
+    });
 
+    // Send Message
+    socket.on("sendMessage", async ({ chatId, sender, content }) => {
       try {
         const chat = await Chat.findById(chatId);
 
         if (!chat || !chat.participants.includes(sender)) {
-          return socket.emit("error", { message: "Unauthorized action" });
+          socket.emit("error", { message: "Unauthorized action" });
+          return;
         }
 
         const newMessage = { chatId, sender, content };
@@ -72,9 +90,8 @@ const initSocket = (server) => {
       }
     });
 
-    socket.on("sendFriendRequest", async (data) => {
-      const { friendId, userId } = data;
-
+    // Friend Request Events
+    socket.on("sendFriendRequest", async ({ friendId }) => {
       try {
         const friendSocketId = onlineUsers.get(friendId);
         if (friendSocketId) {
@@ -88,9 +105,7 @@ const initSocket = (server) => {
       }
     });
 
-    socket.on("respondFriendRequest", async (data) => {
-      const { requestId, status, senderId, receiverId } = data;
-
+    socket.on("respondFriendRequest", async ({ requestId, status, senderId }) => {
       try {
         const senderSocketId = onlineUsers.get(senderId);
         if (senderSocketId) {
@@ -104,51 +119,42 @@ const initSocket = (server) => {
           });
         }
       } catch (error) {
-        console.error(
-          "Error sending friend request response notification:",
-          error
-        );
+        console.error("Error sending friend request response notification:", error);
       }
     });
 
-    // Group Chhat functionality
+    // Group Chat Management
+    const notifyGroup = (event, data) => {
+      const { chatId, userId } = data;
+      io.to(chatId).emit(event, { userId });
+    };
 
     socket.on("adminAdded", (data) => {
-      const { userId } = data;
-      console.log(`Admin added: ${userId}`);
-      socket.broadcast.emit("adminAdded", { userId });
+      console.log(`Admin added: ${data.userId}`);
+      notifyGroup("adminAdded", data);
     });
 
     socket.on("adminRemoved", (data) => {
-      const { userId } = data;
-      console.log(`Admin removed: ${userId}`);
-      socket.broadcast.emit("adminRemoved", { userId });
+      console.log(`Admin removed: ${data.userId}`);
+      notifyGroup("adminRemoved", data);
     });
 
     socket.on("participantAdded", (data) => {
-      const { userId } = data;
-      console.log(`Participant added: ${userId}`);
-      socket.broadcast.emit("participantAdded", { userId });
+      console.log(`Participant added: ${data.userId}`);
+      notifyGroup("participantAdded", data);
     });
 
     socket.on("participantRemoved", (data) => {
-      const { userId } = data;
-      console.log(`Participant removed: ${userId}`);
-      socket.broadcast.emit("participantRemoved", { userId });
+      console.log(`Participant removed: ${data.userId}`);
+      notifyGroup("participantRemoved", data);
     });
 
+    // Cleanup on disconnect
     socket.on("disconnect", () => {
-      const userSockets = onlineUsers.get(userId) || [];
-      onlineUsers.set(
-        userId,
-        userSockets.filter((id) => id !== socket.id)
-      );
-      if (onlineUsers.get(userId).length === 0) {
-        onlineUsers.delete(userId);
-      }
+      onlineUsers.delete(userId);
       console.log("User disconnected:", socket.id);
     });
   });
 };
 
-export { initSocket, io };
+export { initSocket, io, onlineUsers };

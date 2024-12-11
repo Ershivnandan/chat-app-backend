@@ -4,6 +4,7 @@ import userRoutes from './src/routes/user.route.js';
 import dotenv from 'dotenv';
 import './src/config/passport.js'; 
 import chatRoutes from "./src/routes/chat.route.js";
+import notificationRoutes from "./src/routes/notification.route.js";
 import passport from 'passport';
 import session from 'express-session';
 import friendRoutes from "./src/routes/friends.route.js"
@@ -39,9 +40,10 @@ app.use(passport.session());
 app.use('/api/users', userRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/chats', chatRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 initSocket(server);
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
